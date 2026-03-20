@@ -27,7 +27,7 @@ Output:
 
 ### 3. Optimize titer, rate and yield
 
-Contributors: Daria
+Contributors: Davide
 
 Input: 
 - GEM
