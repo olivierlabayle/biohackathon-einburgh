@@ -35,12 +35,23 @@ Input:
 Output:
 - Realized GEM (cobrapy format?)
 
-### 4. Visualize & Interact
-
+### Visualize & Interact: The BioOptimize Interface
 Contributors: Anooraag, Kanika, Chumeng
 
-Input: 
-- GEM (format cobrapy?)
+Problem Solved: Genome-Scale Metabolic Models (GEMs) are powerful but often inaccessible to non-specialists due to complex command-line interfaces. We built an interactive bridge that allows bioprocess engineers to "play" with their strain's metabolism without writing a single line of code.
 
-Output:
-- Visualization Interface (format?)
+Input Logic:
+
+GEM Engine: Powered by COBRApy. The interface accepts standard metabolic model formats (SBML/XML, JSON) generated from the genomic pipeline.
+
+Flexible Data Sources: Users can select from a library of industrial fungal strains (A. niger, N. crassa, etc.) or upload custom FASTA/GFF files.
+
+Output & Features:
+
+Interactive UI: Built with Streamlit for a seamless, browser-based experience.
+
+Real-time FBA Simulation: Dynamic sliders allow users to adjust media components (Glucose, Oxygen, Nitrogen) and see the Predicted Growth Rate update instantly via Plotly visualizations.
+
+Sensitivity Analysis: Automated charts showing how specific nutrient ranges impact biomass yield, helping to narrow down "wet-lab" experimental space.
+
+Bioprocess Report: An automated plain-English summary of optimal media conditions, exportable for laboratory use.
