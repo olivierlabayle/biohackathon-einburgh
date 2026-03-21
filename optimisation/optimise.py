@@ -10,6 +10,7 @@ Output:
     Optimized model in .xml format at {model_path}_optimized.xml
 """
 
+import pandas as pd
 import cobra
 from cobra.io import read_sbml_model, write_sbml_model
 
@@ -31,6 +32,23 @@ def optimize_model(model: cobra.Model, objective: str, direction: str = "max"):
     max_growth = solution.objective_value
 
     return model, max_growth
+
+def save_try_to_csv(product_id: str, substrates: list[str], biomass_concentration: float, yield_val: float, rate: float, titer: float, csv_file: str = 'try_results.csv'):
+    # Create DataFrame with unique ID
+    data = {
+        'product_id': [product_id],
+        'substrates': [','.join(substrates)],
+        'biomass_concentration': [biomass_concentration],
+        'yield': [yield_val],
+        'rate': [rate],
+        'titer': [titer]
+    }
+    
+    df = pd.DataFrame(data)
+    
+    df.to_csv(csv_file, mode='a', header=not pd.io.common.file_exists(csv_file), index=False)
+    
+    print(f"Results saved to {csv_file}")
 
 def compute_try(model: cobra.Model, product_id: str, substrates: str, biomass_concentration: float):
     """
@@ -60,6 +78,8 @@ def compute_try(model: cobra.Model, product_id: str, substrates: str, biomass_co
     print(f"Yield: {yield_val:.4f} mol/mol")
     print(f"Rate: {rate:.4f} mmol/gDW/h")
     print(f"Titer (after 1h): {titer:.4f} mmol/L")
+
+    save_try_to_csv(product_id, substrates, biomass_concentration, yield_val, rate, titer)
 
     return yield_val, rate, titer
 
