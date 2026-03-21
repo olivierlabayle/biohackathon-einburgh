@@ -47,12 +47,13 @@ streamlit run app.py
 
 ##### Input
 **Genome fasta file**
-- 1) Default option: four strains in the library. Already in the code; The user can also just search the genome name (need API added to our website), find matched genome;
-- 2) Customed genome. The users can also upload their own genome, first search the genome seuquence from the NCBI/emsemble, genome cannot be found should raise error. Add a hint about the genome format should be either DNA sequence or protein sequence fasta file. Only allow one file each time. 
-- 3) For the "uploading genome" interface, put the button in the middle, the user can simply drag their genome to upload it.
+1) Default option: four strains in the library. Already in the code; The user can also just search the genome name (need API added to our website), find matched genome;
+2) Customised genome. The users can also upload their own genome, the genome format should be protein sequence fasta file. Add a hint about the genome format should be protein sequence fasta file. Only allow one file each time.
+3) For the "uploading genome" interface, put the button in the middle, the user can simply drag their genome to upload it.
+  
 **GEM Engine**
-- 1) already integrated in the website. The user only need to click the button to run it.  
-- 2) the user can also upload their GEM modelThe interface accepts standard metabolic model formats (SBML/XML, JSON).
+1) already integrated in the website. The user only need to click the button to run it.  
+2) the user can also upload their GEM modelThe interface accepts standard metabolic model formats (SBML/XML, JSON).
 
 **Output & Features:**
 - Interactive UI: Built with Streamlit for a seamless, browser-based experience.
