@@ -280,7 +280,7 @@ with tab_overview:
 # --- TAB 3: FINAL REPORT ---
 with tab_report:
     if st.session_state.model_built:
-        st.subheader("Download GEM")
+        st.subheader("Download GEM (only available if new GEM built using custom input")
         with open(st.session_state.model_file, "r") as f:
             st.download_button(
                 label="Download GEM",
