@@ -8,6 +8,7 @@ dependencies = [
     "carveme>=1.6.6",
     "cobra>=0.30.0",
     "pandas>=2.3.3",
+    "plotly>=6.6.0",
     "pyscipopt>=6.1.0",
     "streamlit>=1.55.0",
 ]

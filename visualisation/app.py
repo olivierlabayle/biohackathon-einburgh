@@ -1,8 +1,14 @@
 import streamlit as st
+import os
+from cobra.io import read_sbml_model
 import time
 import pandas as pd
+from build_model import create_carve_model
 from model_engine import load_fungal_model, run_fba_simulation, get_sensitivity_data
 from visuals import plot_growth_bar, plot_sensitivity
+
+MODEL_DIR = "/app/data/models"
+FASTA_DIR = "/app/data/fastas"
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -64,10 +70,7 @@ with st.sidebar:
         selected_strain_name = st.selectbox(
             "Select a default fungal strain:",
             [
-                "Neurospora crassa OR74A (NC12)",
-                "Rhizopus microsporus ATCC 52814 (Rhimi_ATCC52814_1)",
-                "Aspergillus niger ATCC 13496 (Aspni_bvT_1)",
-                "Aspergillus oryzae RIB40 (ASM18445v3)"
+                "GCF_000182925.2"
             ]
         )
         st.success(f"Ready to load: **{selected_strain_name.split(' ')[0]}**")
@@ -101,7 +104,14 @@ with st.sidebar:
                 # Simulating the backend GEM pipeline processing time
                 time.sleep(2.5)
                 try:
-                    model = load_fungal_model(selected_strain_name)
+                    model_file = f"{MODEL_DIR}/model.{selected_strain_name}.xml"
+                    if os.path.exists(model_file):
+                        st.info("Model already exists. Loading from disk...")
+                        model = read_sbml_model(model_file)
+                    else:
+                        st.info("Model not found. Creating a new one...")
+                        model = create_carve_model(selected_strain_name, model_file)
+
                     baseline_solution = run_fba_simulation(model, {})
                     st.session_state.model_obj = model
                     st.session_state.last_solution = baseline_solution

@@ -6,13 +6,19 @@
 	"build": {
         // Path is relative to the devcontainer.json file.
         "dockerfile": "Dockerfile"
-    }
+    },
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	"forwardPorts": [8501],
+
+	// Use 'mounts' to mount folders in the container.
+	"mounts": [
+		"source=${localEnvFile:${localWorkspaceFolder}/.devcontainer/.env},target=/root/.env,type=file,consistency=cached",
+		"source=${localWorkspaceFolder}/data,target=/workspace/data,type=bind,consistency=cached"
+	]
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
