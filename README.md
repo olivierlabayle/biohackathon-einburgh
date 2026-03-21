@@ -29,8 +29,16 @@ Output:
 
 Contributors: Davide
 
-Input: 
-- GEM
+Call run_optimization() to optimize a COBRA model on a given objective (ie. a specific reaction) for maximising (or minimising) its flux.
+
+Input:
+    model_path (str): Path to the SBML model file.
+    objective (str): The reaction id to optimize.
+    direction (str): The direction of optimization (max or min).
+
+Output:
+    Optimized model in .xml format at {model_path}_optimized.xml
+"""
 
 Output:
 - Realized GEM (cobrapy format?)

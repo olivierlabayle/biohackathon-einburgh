@@ -1,9 +1,17 @@
+"""
+use run_optimization() to optimize a COBRA model on a given objective.
+
+Input:
+    model_path (str): Path to the SBML model file.
+    objective (str): The objective to optimize.
+    direction (str): The direction of optimization (max or min).
+
+Output:
+    Optimized model in .xml format at {model_path}_optimized.xml
+"""
+
 import cobra
 from cobra.io import read_sbml_model, write_sbml_model
-
-MODEL_PATH = "salmonella"
-OBJECTIVE = "BIOMASS_iRR1083_1"
-DIRECTION = "max"
 
 
 def optimize_model(model: cobra.Model, objective: str, direction: str = "max"):
@@ -12,8 +20,8 @@ def optimize_model(model: cobra.Model, objective: str, direction: str = "max"):
     
     Args:
         model (cobra.Model): The model to optimize.
-        objective (str): The objective to optimize.
-        
+        objective (str): The reaction id to optimize.
+        direction (str): The direction of optimization (max or min).
     Returns:
         cobra.Model: The optimized model.
     """
@@ -35,15 +43,28 @@ def compute_try(model: cobra.Model):
     """
     pass 
 
-def main():
-    model = read_sbml_model(MODEL_PATH)
+def run_optimization(model_path: str, objective: str, direction: str = "max"):
+    """
+    Run the optimization workflow.
+    
+    Args:
+        model_path (str): Path to the SBML model file.
+        objective (str): The reaction id to optimize.
+        direction (str): The direction of optimization (max or min).
+    """
+    model = read_sbml_model(model_path)
 
-    model_optimized, max_value = optimize_model(model, OBJECTIVE, DIRECTION)
+    model_optimized, max_value = optimize_model(model, objective, direction)
     print(max_value)
 
     compute_try(model_optimized)
 
-    write_sbml_model(model_optimized, MODEL_PATH.replace(".xml", "_optimized.xml"))
+    write_sbml_model(model_optimized, model_path.replace(".xml", "_optimized.xml"))
 
 if __name__ == "__main__":
-    main()
+
+    MODEL_PATH = "salmonella"
+    OBJECTIVE = "BIOMASS_iRR1083_1"
+    DIRECTION = "max"
+
+    run_optimization(MODEL_PATH, OBJECTIVE, DIRECTION)
