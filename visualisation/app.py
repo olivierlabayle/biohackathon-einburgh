@@ -194,7 +194,7 @@ with tab_overview:
 
             st.markdown("""**Build a media recipe**""")
             # --- Input Row ---
-            col1, col2, col3 = st.columns([1, 1, 1])
+            col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
             
             with col1:
                 selected_exchange_name = st.selectbox("Select an exchange reaction:", options=[None] + [rxn.name for rxn in model.exchanges], index=0, key="exchanges_select")
@@ -206,10 +206,18 @@ with tab_overview:
                 if st.button("Add to Medium"):
                     st.session_state.custom_medium[selected_exchange_name] = flux_value
 
+            with col4:
+                if st.button("Infinite Media"):
+                    st.session_state.custom_medium = {exchange.name: 1000.0 for exchange in model.exchanges}
+                    st.rerun()
+            
+
             # --- Display and Apply Medium ---
             if st.session_state.custom_medium:
                 st.markdown("### **Current Recipe**")
                 st.table(st.session_state.custom_medium)
+
+
                 
                 if st.button("Clear Medium", type="secondary"):
                     st.session_state.custom_medium = {}
