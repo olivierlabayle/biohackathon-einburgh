@@ -40,6 +40,11 @@ Contributors: Anooraag, Kanika, Chumeng
 
 Problem Solved: Genome-Scale Metabolic Models (GEMs) are powerful but often inaccessible to non-specialists due to complex command-line interfaces. We built an interactive bridge that allows bioprocess engineers to "play" with their strain's metabolism without writing a single line of code.
 
+#### Quick start
+```
+streamlit run app.py
+```
+
 Input Logic:
 
 GEM Engine: Powered by COBRApy. The interface accepts standard metabolic model formats (SBML/XML, JSON) generated from the genomic pipeline.
