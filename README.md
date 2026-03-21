@@ -45,18 +45,17 @@ Problem Solved: Genome-Scale Metabolic Models (GEMs) are powerful but often inac
 streamlit run app.py
 ```
 
-Input Logic:
+##### Input
+**Genome fasta file**
+- 1) Default option: four strains in the library. Already in the code; The user can also just search the genome name (need API added to our website), find matched genome;
+- 2) Customed genome. The users can also upload their own genome, first search the genome seuquence from the NCBI/emsemble, genome cannot be found should raise error. Add a hint about the genome format should be either DNA sequence or protein sequence fasta file. Only allow one file each time. 
+- 3) For the "uploading genome" interface, put the button in the middle, the user can simply drag their genome to upload it.
+**GEM Engine**
+- 1) already integrated in the website. The user only need to click the button to run it.  
+- 2) the user can also upload their GEM modelThe interface accepts standard metabolic model formats (SBML/XML, JSON).
 
-GEM Engine: Powered by COBRApy. The interface accepts standard metabolic model formats (SBML/XML, JSON) generated from the genomic pipeline.
-
-Flexible Data Sources: Users can select from a library of industrial fungal strains (A. niger, N. crassa, etc.) or upload custom FASTA/GFF files.
-
-Output & Features:
-
-Interactive UI: Built with Streamlit for a seamless, browser-based experience.
-
-Real-time FBA Simulation: Dynamic sliders allow users to adjust media components (Glucose, Oxygen, Nitrogen) and see the Predicted Growth Rate update instantly via Plotly visualizations.
-
+**Output & Features:**
+- Interactive UI: Built with Streamlit for a seamless, browser-based experience.
+- Real-time FBA Simulation: Dynamic sliders allow users to adjust media components (Glucose, Oxygen, Nitrogen) and see the Predicted Growth Rate update instantly via Plotly visualizations.
 Sensitivity Analysis: Automated charts showing how specific nutrient ranges impact biomass yield, helping to narrow down "wet-lab" experimental space.
-
 Bioprocess Report: An automated plain-English summary of optimal media conditions, exportable for laboratory use.
