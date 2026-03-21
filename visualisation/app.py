@@ -6,6 +6,7 @@ import pandas as pd
 from build_model import create_carve_model
 from model_engine import load_fungal_model, run_fba_simulation, get_sensitivity_data
 from visuals import plot_growth_bar, plot_sensitivity
+from optimise import run_optimization
 
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
@@ -167,6 +168,14 @@ with tab_overview:
         exchange_reactions = [rxn.id for rxn in model.exchanges[:12]]
         exchange_df = pd.DataFrame({"Exchange Reactions (sample)": exchange_reactions})
         st.dataframe(exchange_df, use_container_width=True)
+
+        # Optimize model
+        objective = st.selectbox("Select an objective reaction to optimize:", options=[rxn.id for rxn in model.reactions], index=0, key="objective_select")
+        substrate = None
+        biomass_concentration = None
+        objective = None
+        direction = "max"
+        run_optimization(model, substrate, 0.1, "BIOMASS_Ecoli_core_w_GAM", "max")
 
     else:
         if st.session_state.build_error:
