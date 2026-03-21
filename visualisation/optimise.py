@@ -14,7 +14,7 @@ import cobra
 from cobra.io import read_sbml_model, write_sbml_model
 from media import MEDIA
 
-def optimize_model(model: cobra.Model, objective: str, direction: str = "max"):
+def optimize_model(model: cobra.Model, medium: dict, objective: str, direction: str = "max"):
     """
     Optimize a COBRA model on a given objective.
     
@@ -25,12 +25,14 @@ def optimize_model(model: cobra.Model, objective: str, direction: str = "max"):
     Returns:
         cobra.Model: The optimized model.
     """
-    model.objective = objective
-    model.objective_direction = direction
-    solution = model.optimize()
-    max_growth = solution.objective_value
+    with model:
+        model.medium = medium
+        model.objective = objective
+        model.objective_direction = direction
+        solution = model.optimize()
+        max_growth = solution.objective_value
 
-    return model, max_growth
+    return solution, max_growth
 
 def compute_try(model: cobra.Model, product_id: str, substrates: str, biomass_concentration: float):
     """

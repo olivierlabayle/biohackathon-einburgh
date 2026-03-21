@@ -132,6 +132,7 @@ with st.sidebar:
                 st.session_state.model_built = True
                 st.session_state.build_error = None
                 st.session_state.model_file = model_file
+                st.session_state.custom_medium = {}
                 st.success("Model loaded and baseline simulation completed.")
             except Exception as exc:
                 st.session_state.model_built = False
@@ -140,6 +141,7 @@ with st.sidebar:
                 st.session_state.model_file = None
                 st.session_state.sensitivity_df = pd.DataFrame()
                 st.session_state.build_error = str(exc)
+                st.session_state.custom_medium = {}
                 st.error(f"Model build failed: {exc}")
 
 # --- MAIN DASHBOARD ---
@@ -174,33 +176,50 @@ with tab_overview:
         col3.metric("Genes Mapped", f"{len(model.genes):,}")
         col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Maximum Theroretical Growth Rate")
 
-        st.write(model.metabolites.get_by_id("o2_e"))
-
         # Select a Reaction and Minimum Growth Rate for Media Optimization
         st.markdown("""**Obtain a minimal medium for your reaction**""")
-        col1, col2 = st.columns(2)
-        with col1:
-            selected_reaction_name = st.selectbox("Select a reaction to optimize:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="reaction_select")
-        with col2:
-            selected_minimal_growth_rate = st.number_input("Minimum growth rate constraint (h⁻¹)", min_value=0.0, max_value=2.0, value=0.7,help="Set a minimum growth rate to ensure viability while optimizing for the selected reaction.")
+        selected_reaction_name = st.selectbox("Select a reaction to optimise:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="objective_select")
+        
 
         # Find the minimum media for the selected reaction and growth rate
-        if selected_reaction_name and selected_minimal_growth_rate:
+        if selected_reaction_name:
+            # Get objective info
             selected_reaction_id = next(rxn.id for rxn in model.reactions if rxn.name == selected_reaction_name)
             selected_reaction = model.reactions.get_by_id(selected_reaction_id)
+
             st.write(f"**Reaction ID:** {selected_reaction.id}")
             st.write(f"**Equation:** {selected_reaction.build_reaction_string()}")
-            
             st.write(model.objective)
-            minimum_medium = cobra.medium.minimal_medium(model, selected_minimal_growth_rate)
 
-            st.table(minimum_medium)
+            st.markdown("""**Build a media recipe**""")
+            # --- Input Row ---
+            col1, col2, col3 = st.columns([1, 1, 1])
             
-            # Check if using that medium actually realises the rate
-            model.medium = minimum_medium
-            optimized_model, optimized_growth = optimize_model(model, objective=selected_reaction_id, direction="max")
+            with col1:
+                selected_exchange_name = st.selectbox("Select an exchange reaction:", options=[None] + [rxn.name for rxn in model.exchanges], index=0, key="exchanges_select")
 
-            st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
+            with col2:
+                flux_value = st.number_input("Uptake Rate:", min_value=-1000.0, value=10.0, step=1.0)
+            
+            with col3:
+                if st.button("Add to Medium"):
+                    st.session_state.custom_medium[selected_exchange_name] = flux_value
+
+            # --- Display and Apply Medium ---
+            if st.session_state.custom_medium:
+                st.markdown("### **Current Recipe**")
+                st.table(st.session_state.custom_medium)
+                
+                if st.button("Clear Medium", type="secondary"):
+                    st.session_state.custom_medium = {}
+                    st.rerun()
+
+                if st.button("Run optimisation"):
+                    # COBRApy handles the assignment
+                    with model:
+                        optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
+                        st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
+                        st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")            
         
             # st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
 
