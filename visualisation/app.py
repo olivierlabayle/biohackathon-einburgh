@@ -6,7 +6,7 @@ from visuals import plot_growth_bar, plot_sensitivity
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="BioOptimize: Fungi Edition",
+    page_title="GEMtimise",
     page_icon="🍄",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -48,11 +48,11 @@ if 'build_error' not in st.session_state:
 # --- SIDEBAR: CONFIGURATION ---
 with st.sidebar:
     st.markdown(
-    "<h1 style='color: orange; font-weight: bold;'>GEMitimise</h1>",
-    unsafe_allow_html=True
-    st.markdown("Automated GEM Generation & Media Optimization")
+        "<h1><span style='color: orange; font-weight: bold;'>GEM</span><span style='color: black; font-weight: bold;'>timise</span></h1>",
+        unsafe_allow_html=True
+    )
+    st.markdown("Automated GEM Generation and Media Optimisation")
     st.divider()
-
     st.subheader("1. Select Strain Data")
     input_method = st.radio(
         "Choose your input method:",
