@@ -221,15 +221,6 @@ with tab_overview:
                         optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
                         st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
                         st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")            
-        
-            # st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
-
-        st.subheader("Network Confidence")
-        st.write("Overview of key exchange reactions available in the reconstructed model.")
-
-        exchange_reactions = [rxn.id for rxn in model.exchanges]
-        exchange_df = pd.DataFrame({"Exchange Reactions": exchange_reactions})
-        st.dataframe(exchange_df, use_container_width=True)
 
 
     else:
