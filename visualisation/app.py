@@ -163,11 +163,17 @@ with tab_overview:
         col1.metric("Metabolic Reactions", f"{len(model.reactions):,}")
         col2.metric("Metabolites", f"{len(model.metabolites):,}")
         col3.metric("Genes Mapped", f"{len(model.genes):,}")
-        col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Maximum Growth Media")
+        col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Maximum Theroretical Growth Rate")
 
-        selected_reaction_name = st.selectbox("Select a reaction to optimize:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="reaction_select")
-        selected_minimal_growth_rate = st.number_input("Minimum growth rate constraint (h⁻¹)", min_value=0.0, max_value=2.0, help="Set a minimum growth rate to ensure viability while optimizing for the selected reaction.")
+        # Select a Reaction and Minimum Growth Rate for Media Optimization
+        st.markdown("""**Obtain a minimal medium for your reaction**""")
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_reaction_name = st.selectbox("Select a reaction to optimize:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="reaction_select")
+        with col2:
+            selected_minimal_growth_rate = st.number_input("Minimum growth rate constraint (h⁻¹)", min_value=0.0, max_value=2.0, value=0.7,help="Set a minimum growth rate to ensure viability while optimizing for the selected reaction.")
 
+        # Find the minimum media for the selected reaction and growth rate
         if selected_reaction_name and selected_minimal_growth_rate:
             selected_reaction_id = next(rxn.id for rxn in model.reactions if rxn.name == selected_reaction_name)
             selected_reaction = model.reactions.get_by_id(selected_reaction_id)
