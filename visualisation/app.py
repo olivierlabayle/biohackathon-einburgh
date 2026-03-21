@@ -9,13 +9,16 @@ from model_engine import load_fungal_model, run_fba_simulation, get_sensitivity_
 from visuals import plot_growth_bar, plot_sensitivity
 from optimise import run_optimization, optimize_model
 from media import MEDIA
-
+from add_oxygen import add_oxygen_to_model
 
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
 
-os.path.isdir(MODEL_DIR) or os.makedirs(MODEL_DIR)
-os.path.isdir(FASTA_DIR) or os.makedirs(FASTA_DIR)
+if not os.path.isdir(MODEL_DIR):
+    os.makedirs(MODEL_DIR)
+    
+if not os.path.isdir(FASTA_DIR):
+    os.makedirs(FASTA_DIR)
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -118,6 +121,8 @@ with st.sidebar:
                     st.info("Model not found. Creating a new one...")
                     model = create_carve_model(selected_strain_name, fasta_file, model_file)
 
+                add_oxygen_to_model(model)
+
                 baseline_solution = model.optimize()
                 st.session_state.model = model
                 st.session_state.last_solution = baseline_solution
@@ -165,6 +170,8 @@ with tab_overview:
         col3.metric("Genes Mapped", f"{len(model.genes):,}")
         col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Maximum Theroretical Growth Rate")
 
+        st.write(model.metabolites.get_by_id("o2_e"))
+
         # Select a Reaction and Minimum Growth Rate for Media Optimization
         st.markdown("""**Obtain a minimal medium for your reaction**""")
         col1, col2 = st.columns(2)
@@ -179,15 +186,19 @@ with tab_overview:
             selected_reaction = model.reactions.get_by_id(selected_reaction_id)
             st.write(f"**Reaction ID:** {selected_reaction.id}")
             st.write(f"**Equation:** {selected_reaction.build_reaction_string()}")
-            st.write(f"**Associated Genes:** {', '.join(gene.id for gene in selected_reaction.genes) if selected_reaction.genes else 'None'}")
             
+            st.write(model.objective)
             minimum_medium = cobra.medium.minimal_medium(model, selected_minimal_growth_rate)
 
-            st.dataframe(minimum_medium)
+            st.table(minimum_medium)
+            
+            # Check if using that medium actually realises the rate
+            model.medium = minimum_medium
+            optimized_model, optimized_growth = optimize_model(model, objective=selected_reaction_id, direction="max")
 
-            st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {growth_rate:.3f} h⁻¹**")
+            st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
         
-            st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
+            # st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
 
         st.subheader("Network Confidence")
         st.write("Overview of key exchange reactions available in the reconstructed model.")

@@ -14,7 +14,7 @@ import cobra
 from cobra.io import read_sbml_model, write_sbml_model
 from media import MEDIA
 
-def optimize_model(model: cobra.Model, objective: str, medium_name: str, direction: str = "max"):
+def optimize_model(model: cobra.Model, objective: str, direction: str = "max"):
     """
     Optimize a COBRA model on a given objective.
     
@@ -25,8 +25,6 @@ def optimize_model(model: cobra.Model, objective: str, medium_name: str, directi
     Returns:
         cobra.Model: The optimized model.
     """
-    if medium_name:
-        model.medium = MEDIA[medium_name]
     model.objective = objective
     model.objective_direction = direction
     solution = model.optimize()
