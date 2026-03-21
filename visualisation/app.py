@@ -16,7 +16,7 @@ FASTA_DIR = "/app/data/fastas"
 
 if not os.path.isdir(MODEL_DIR):
     os.makedirs(MODEL_DIR)
-    
+
 if not os.path.isdir(FASTA_DIR):
     os.makedirs(FASTA_DIR)
 
@@ -60,6 +60,8 @@ if 'sensitivity_df' not in st.session_state:
     st.session_state.sensitivity_df = pd.DataFrame()
 if 'build_error' not in st.session_state:
     st.session_state.build_error = None
+if 'model_file' not in st.session_state:
+    st.session_state.model_file = None
 
 # --- SIDEBAR: CONFIGURATION ---
 with st.sidebar:
@@ -129,11 +131,13 @@ with st.sidebar:
                 st.session_state.sensitivity_df = get_sensitivity_data(model, "EX_glc__D_e")
                 st.session_state.model_built = True
                 st.session_state.build_error = None
+                st.session_state.model_file = model_file
                 st.success("Model loaded and baseline simulation completed.")
             except Exception as exc:
                 st.session_state.model_built = False
                 st.session_state.model = None
                 st.session_state.last_solution = None
+                st.session_state.model_file = None
                 st.session_state.sensitivity_df = pd.DataFrame()
                 st.session_state.build_error = str(exc)
                 st.error(f"Model build failed: {exc}")
@@ -256,7 +260,13 @@ with tab_optimizer:
 # --- TAB 3: FINAL REPORT (Placeholder for Phase 4) ---
 with tab_report:
     if st.session_state.model_built:
-        st.subheader("Optimization Summary Report")
-        st.write("A plain-english summary of the optimal media conditions will appear here once you finish tuning in the Optimizer tab.")
+        st.subheader("Download GEM")
+        with open(st.session_state.model_file, "r") as f:
+            st.download_button(
+                label="Download GEM",
+                data=f,
+                file_name="GEM.xml",
+                mime="text/plain"
+            )
     else:
         st.warning("Generate a model and tune your media to unlock the Final Report.")
