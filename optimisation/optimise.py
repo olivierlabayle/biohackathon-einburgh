@@ -73,7 +73,10 @@ def run_optimization(model_path: str, substrates: list[str], biomass_concentrati
         direction (str): The direction of optimization (max or min).
     """
 
-    model = read_sbml_model(model_path)
+    if not model_path.endswith(".xml"):
+        model = cobra.io.load_model(model_path)
+    else:
+        model = read_sbml_model(model_path)
 
     model_optimized, max_value = optimize_model(model, objective, direction)
     print(max_value)
