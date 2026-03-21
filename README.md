@@ -54,6 +54,10 @@ streamlit run app.py
 - 1) already integrated in the website. The user only need to click the button to run it.  
 - 2) the user can also upload their GEM modelThe interface accepts standard metabolic model formats (SBML/XML, JSON).
 
+##### UI design
+- remove the side bar at left;
+- imitate the website style https://www.pacifico.bio/, set the main color into black, and highlighted buttons as orange. Font 'sanserif'.
+
 **Output & Features:**
 - Interactive UI: Built with Streamlit for a seamless, browser-based experience.
 - Real-time FBA Simulation: Dynamic sliders allow users to adjust media components (Glucose, Oxygen, Nitrogen) and see the Predicted Growth Rate update instantly via Plotly visualizations.
