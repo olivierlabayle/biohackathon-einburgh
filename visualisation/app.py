@@ -66,7 +66,7 @@ if 'model_file' not in st.session_state:
 # --- SIDEBAR: CONFIGURATION ---
 with st.sidebar:
     st.markdown(
-        "<h1><span style='color: orange; font-weight: bold;'>GEM</span><span style='color: black; font-weight: bold;'>timise</span></h1>",
+        "<h1><span style='color: orange; font-weight: bold;'>GEM</span><span style='color: black; font-weight: bold;'>timize</span></h1>",
         unsafe_allow_html=True
     )
     st.markdown("Automated GEM Generation and Media Optimisation")
@@ -147,7 +147,7 @@ with st.sidebar:
 # --- MAIN DASHBOARD ---
 st.title("Media Optimization Workspace")
 st.markdown("""
-**Welcome to BioOptimize.** Genome-Scale Metabolic Models (GEMs) act like a digital twin of your microbe.
+**Welcome to GEMtimize.** Genome-Scale Metabolic Models (GEMs) act like a digital twin of your microbe.
 By mapping out every metabolic reaction, we can computationally predict which nutrients will boost growth or target production—saving you weeks of trial-and-error in the wet lab.
 """)
 
