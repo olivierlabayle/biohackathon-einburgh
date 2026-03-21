@@ -6,7 +6,9 @@ import pandas as pd
 from build_model import create_carve_model
 from model_engine import load_fungal_model, run_fba_simulation, get_sensitivity_data
 from visuals import plot_growth_bar, plot_sensitivity
-from optimise import run_optimization
+from optimise import run_optimization, optimize_model
+from media import MEDIA
+
 
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
@@ -160,7 +162,21 @@ with tab_overview:
         col2.metric("Metabolites", f"{len(model.metabolites):,}")
         col3.metric("Genes Mapped", f"{len(model.genes):,}")
         col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Baseline Media")
-        st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
+
+        selected_reaction_name = st.selectbox("Select a reaction to optimize:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="reaction_select")
+        if selected_reaction_name:
+            selected_reaction_id = next(rxn.id for rxn in model.reactions if rxn.name == selected_reaction_name)
+            selected_reaction = model.reactions.get_by_id(selected_reaction_id)
+            st.write(f"**Reaction ID:** {selected_reaction.id}")
+            st.write(f"**Equation:** {selected_reaction.build_reaction_string()}")
+            st.write(f"**Associated Genes:** {', '.join(gene.id for gene in selected_reaction.genes) if selected_reaction.genes else 'None'}")
+
+            optimized_model, growth_rate = optimize_model(model, selected_reaction_id, direction="max")
+
+            st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}**")
+
+        
+            st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
 
         st.subheader("Network Confidence")
         st.write("Overview of key exchange reactions available in the reconstructed model.")
@@ -169,13 +185,6 @@ with tab_overview:
         exchange_df = pd.DataFrame({"Exchange Reactions (sample)": exchange_reactions})
         st.dataframe(exchange_df, use_container_width=True)
 
-        # Optimize model
-        objective = st.selectbox("Select an objective reaction to optimize:", options=[rxn.id for rxn in model.reactions], index=0, key="objective_select")
-        substrate = None
-        biomass_concentration = None
-        objective = None
-        direction = "max"
-        run_optimization(model, substrate, 0.1, "BIOMASS_Ecoli_core_w_GAM", "max")
 
     else:
         if st.session_state.build_error:
