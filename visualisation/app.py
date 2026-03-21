@@ -11,6 +11,16 @@ from optimise import run_optimization, optimize_model
 from media import MEDIA
 from add_oxygen import add_oxygen_to_model
 
+# --- NEW FEATURE (currently being integrated into the web app) ---
+# Provides DNA vs protein detection, DNA-to-protein translation, and a
+# download button for the translated protein FASTA. See sequence_utils.py.
+from sequence_utils import (
+    detect_sequence_type,
+    translate_dna_to_protein,
+    prepare_fasta_for_carveme,
+    render_download_button,
+)
+
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
 
