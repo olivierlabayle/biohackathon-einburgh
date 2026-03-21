@@ -300,6 +300,18 @@ with tab_overview:
                     
                     *Reference: Konzock & Nielsen, Trends in Biotechnology, 2024*
                     """)
+
+                st.markdown("### **Best Recipe**")
+                optimal_medium = cobra.medium.minimal_medium(st.session_state.optimized_model, st.session_state.optimized_growth)
+                
+                # Convert to DataFrame and sort
+                optimal_df = optimal_medium.reset_index()
+                optimal_df.columns = ['Exchange Reaction', 'Flux']
+                optimal_df = optimal_df.sort_values(by='Flux', ascending=False)
+
+                
+                st.table(optimal_df[['Exchange Reaction', 'Flux']])
+
             else:
                 st.info("👈 Build and optimize a model to see TRY benchmarking metrics.")
 
