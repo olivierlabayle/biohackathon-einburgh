@@ -22,7 +22,7 @@ if not os.path.isdir(FASTA_DIR):
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="BioOptimize: Fungi Edition",
+    page_title="GEmtimize",
     page_icon="🍄",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -65,10 +65,12 @@ if 'model_file' not in st.session_state:
 
 # --- SIDEBAR: CONFIGURATION ---
 with st.sidebar:
-    st.title("🍄 BioOptimize Fungi")
-    st.markdown("Automated GEM Generation & Media Optimization")
+    st.markdown(
+        "<h1><span style='color: orange; font-weight: bold;'>GEM</span><span style='color: black; font-weight: bold;'>timise</span></h1>",
+        unsafe_allow_html=True
+    )
+    st.markdown("Automated GEM Generation and Media Optimisation")
     st.divider()
-
     st.subheader("1. Select Strain Data")
     input_method = st.radio(
         "Choose your input method:",
@@ -110,7 +112,7 @@ with st.sidebar:
     st.divider()
 
     st.subheader("2. Run Pipeline")
-    if st.button("🚀 Build Metabolic Model"):
+    if st.button("Build Metabolic Model"):
         with st.spinner(f"Reconstructing metabolic network for {selected_strain_name}..."):
             # Simulating the backend GEM pipeline processing time
             time.sleep(2.5)
@@ -150,9 +152,8 @@ By mapping out every metabolic reaction, we can computationally predict which nu
 """)
 
 # --- TABS ---
-tab_overview, tab_optimizer, tab_report = st.tabs([
+tab_overview, tab_report = st.tabs([
     "📊 Model Overview",
-    "🧪 Media Optimizer",
     "📝 Final Report"
 ])
 
@@ -217,47 +218,47 @@ with tab_overview:
             st.error(f"Last build error: {st.session_state.build_error}")
         st.info("👈 Please select a strain or upload a genome in the sidebar, then click 'Build Metabolic Model'.")
 
-# --- TAB 2: MEDIA OPTIMIZER (Placeholder for Phase 3) ---
-with tab_optimizer:
-    if st.session_state.model_built:
-        st.subheader("Interactive Media Formulation")
-        st.write("Adjust glucose uptake. Growth and sensitivity update automatically.")
+# --- TAB 2: MEDIA OPTIMIZER ---
+# with tab_optimizer:
+#     if st.session_state.model_built:
+#         st.subheader("Interactive Media Formulation")
+#         st.write("Adjust glucose uptake. Growth and sensitivity update automatically.")
 
-        glucose_uptake = st.slider(
-            "Glucose uptake limit (EX_glc__D_e, mmol/gDW/h)",
-            min_value=0.0,
-            max_value=20.0,
-            value=10.0,
-            step=0.5,
-            help="Higher values allow more glucose import. Internal model lower bound is set to the negative of this value."
-        )
+#         glucose_uptake = st.slider(
+#             "Glucose uptake limit (EX_glc__D_e, mmol/gDW/h)",
+#             min_value=0.0,
+#             max_value=20.0,
+#             value=10.0,
+#             step=0.5,
+#             help="Higher values allow more glucose import. Internal model lower bound is set to the negative of this value."
+#         )
 
-        new_solution = run_fba_simulation(
-            st.session_state.model,
-            {"EX_glc__D_e": -glucose_uptake}
-        )
-        st.session_state.last_solution = new_solution
-        sensitivity_max = max(2, int(glucose_uptake * 2))
-        st.session_state.sensitivity_df = get_sensitivity_data(
-            st.session_state.model,
-            "EX_glc__D_e",
-            max_flux=sensitivity_max,
-            step=2
-        )
+#         new_solution = run_fba_simulation(
+#             st.session_state.model,
+#             {"EX_glc__D_e": -glucose_uptake}
+#         )
+#         st.session_state.last_solution = new_solution
+#         sensitivity_max = max(2, int(glucose_uptake * 2))
+#         st.session_state.sensitivity_df = get_sensitivity_data(
+#             st.session_state.model,
+#             "EX_glc__D_e",
+#             max_flux=sensitivity_max,
+#             step=2
+#         )
 
-        current_solution = st.session_state.last_solution
-        if current_solution is not None and getattr(current_solution, "status", "") == "optimal":
-            st.metric("Current Predicted Growth", f"{float(current_solution.objective_value):.3f} h⁻¹")
-        else:
-            st.warning("No optimal solution found for current media setup.")
+#         current_solution = st.session_state.last_solution
+#         if current_solution is not None and getattr(current_solution, "status", "") == "optimal":
+#             st.metric("Current Predicted Growth", f"{float(current_solution.objective_value):.3f} h⁻¹")
+#         else:
+#             st.warning("No optimal solution found for current media setup.")
 
-        st.subheader("Sensitivity Scan (Glucose)")
-        sensitivity_fig = plot_sensitivity(st.session_state.sensitivity_df, "Glucose")
-        st.plotly_chart(sensitivity_fig, use_container_width=True)
-    else:
-        st.warning("You must build a model first to unlock the Media Optimizer.")
+#         st.subheader("Sensitivity Scan (Glucose)")
+#         sensitivity_fig = plot_sensitivity(st.session_state.sensitivity_df, "Glucose")
+#         st.plotly_chart(sensitivity_fig, use_container_width=True)
+#     else:
+#         st.warning("You must build a model first to unlock the Media Optimizer.")
 
-# --- TAB 3: FINAL REPORT (Placeholder for Phase 4) ---
+# --- TAB 3: FINAL REPORT ---
 with tab_report:
     if st.session_state.model_built:
         st.subheader("Download GEM")
