@@ -120,14 +120,14 @@ with st.sidebar:
                     st.error(f"Model build failed: {exc}")
 
 # --- MAIN DASHBOARD ---
-st.title("Media Optimization Workspace")
+st.title("Media Optimisation Workspace")
 st.markdown("""
-**Welcome to BioOptimize.** Genome-Scale Metabolic Models (GEMs) act like a digital twin of your microbe.
+**Welcome to GEMtimise.** Genome-Scale Metabolic Models (GEMs) act like a digital twin of your microbe.
 By mapping out every metabolic reaction, we can computationally predict which nutrients will boost growth or target production—saving you weeks of trial-and-error in the wet lab.
 """)
 
 # --- TABS ---
-tab_overview, tab_optimizer, tab_report = st.tabs([
+tab_overview, tab_report = st.tabs([
     "📊 Model Overview",
     "📝 Final Report"
 ])
@@ -200,12 +200,12 @@ with tab_overview:
 #         sensitivity_fig = plot_sensitivity(st.session_state.sensitivity_df, "Glucose")
 #         st.plotly_chart(sensitivity_fig, use_container_width=True)
 #     else:
-#         st.warning("You must build a model first to unlock the Media Optimizer.")
+#         st.warning("You must build a model first to unlock the Media Optimiser.")
 
 # --- TAB 3: FINAL REPORT ---
 with tab_report:
     if st.session_state.model_built:
-        st.subheader("Optimization Summary Report")
+        st.subheader("Optimisation Summary Report")
         st.write("A plain-english summary of the optimal media conditions will appear here once you finish tuning in the Optimizer tab.")
     else:
         st.warning("Generate a model and tune your media to unlock the Final Report.")
