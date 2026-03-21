@@ -1,3 +1,4 @@
+import cobra
 import streamlit as st
 import os
 from cobra.io import read_sbml_model
@@ -152,6 +153,7 @@ with tab_overview:
         st.success(f"Metabolic Model successfully generated for: **{selected_strain_name}**")
 
         model = st.session_state.model
+
         solution = st.session_state.last_solution
         growth_rate = 0.0
         if solution is not None and getattr(solution, "status", "") == "optimal":
@@ -161,30 +163,31 @@ with tab_overview:
         col1.metric("Metabolic Reactions", f"{len(model.reactions):,}")
         col2.metric("Metabolites", f"{len(model.metabolites):,}")
         col3.metric("Genes Mapped", f"{len(model.genes):,}")
-        col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Baseline Media")
+        col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Maximum Growth Media")
 
         selected_reaction_name = st.selectbox("Select a reaction to optimize:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="reaction_select")
-        selected_medium_name = st.selectbox("Select a medium", options=MEDIA.keys(), index=0, key="medium_select")
+        selected_minimal_growth_rate = st.number_input("Minimum growth rate constraint (h⁻¹)", min_value=0.0, max_value=2.0, help="Set a minimum growth rate to ensure viability while optimizing for the selected reaction.")
 
-        if selected_reaction_name and selected_medium_name:
+        if selected_reaction_name and selected_minimal_growth_rate:
             selected_reaction_id = next(rxn.id for rxn in model.reactions if rxn.name == selected_reaction_name)
             selected_reaction = model.reactions.get_by_id(selected_reaction_id)
             st.write(f"**Reaction ID:** {selected_reaction.id}")
             st.write(f"**Equation:** {selected_reaction.build_reaction_string()}")
             st.write(f"**Associated Genes:** {', '.join(gene.id for gene in selected_reaction.genes) if selected_reaction.genes else 'None'}")
+            
+            minimum_medium = cobra.medium.minimal_medium(model, selected_minimal_growth_rate)
 
-            optimized_model, growth_rate = optimize_model(model, selected_reaction_id, None, direction="max")
+            st.dataframe(minimum_medium)
 
             st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {growth_rate:.3f} h⁻¹**")
-
         
             st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
 
         st.subheader("Network Confidence")
         st.write("Overview of key exchange reactions available in the reconstructed model.")
 
-        exchange_reactions = [rxn.id for rxn in model.exchanges[:12]]
-        exchange_df = pd.DataFrame({"Exchange Reactions (sample)": exchange_reactions})
+        exchange_reactions = [rxn.id for rxn in model.exchanges]
+        exchange_df = pd.DataFrame({"Exchange Reactions": exchange_reactions})
         st.dataframe(exchange_df, use_container_width=True)
 
 
