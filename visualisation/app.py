@@ -47,7 +47,9 @@ if 'build_error' not in st.session_state:
 
 # --- SIDEBAR: CONFIGURATION ---
 with st.sidebar:
-    st.title("🍄 BioOptimize Fungi")
+    st.markdown(
+    "<h1 style='color: orange; font-weight: bold;'>GEMitimise</h1>",
+    unsafe_allow_html=True
     st.markdown("Automated GEM Generation & Media Optimization")
     st.divider()
 
