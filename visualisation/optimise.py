@@ -34,7 +34,7 @@ def optimize_model(model: cobra.Model, medium: dict, objective: str, direction: 
 
     return model, max_growth
 
-def compute_try(model: cobra.Model, product_id: str, substrates: list, biomass_concentration: float):
+def compute_try(model: cobra.Model, product_id: str, medium: dict, biomass_concentration: float):
     """
     Compute TRY
 
@@ -43,9 +43,11 @@ def compute_try(model: cobra.Model, product_id: str, substrates: list, biomass_c
     - Rate represents the productivity of the cell factory.
     - Titer (product amount per volume, cP) represents the final concentration of the product in the fermentation process.
     """
+    # Extract substrates from current custom medium (carbon sources)
+    # Common carbon source exchange reactions in metabolic models
+    carbon_sources = ["EX_glc__D_e", "EX_sucr_e", "EX_fru_e", "EX_gal_e", "EX_malt_e", "EX_lac__D_e", "EX_ac_e", "EX_etoh_e", "EX_glyc_e"]
+    substrates = [rxn for rxn in medium.keys() if rxn in carbon_sources]
 
-    print(f"Computing TRY for product: {product_id}, substrate: {substrates}, biomass concentration: {biomass_concentration}")
-    
     # 1. Yield (Y_SP)
     # Yield = Flux of Product / |Flux of Substrate|
     product_flux = model.reactions.get_by_id(product_id).flux
@@ -58,10 +60,6 @@ def compute_try(model: cobra.Model, product_id: str, substrates: list, biomass_c
 
     # Estimated Titer (mmol/L) = Rate * Biomass
     titer = rate * biomass_concentration
-
-    print(f"Yield: {yield_val:.4f} mol/mol")
-    print(f"Rate: {rate:.4f} mmol/gDW/h")
-    print(f"Titer (after 1h): {titer:.4f} mmol/L")
 
     return yield_val, rate, titer
 

@@ -237,11 +237,7 @@ with tab_overview:
             # Compute TRY metrics (Titer, Rate, Yield) for the optimized model
             if st.session_state.model_built and 'optimized_model' in st.session_state:
         
-                # Extract substrates from current custom medium (carbon sources)
-                # Common carbon source exchange reactions in metabolic models
-                carbon_sources = ["EX_glc__D_e", "EX_sucr_e", "EX_fru_e", "EX_gal_e", "EX_malt_e", "EX_lac__D_e", "EX_ac_e", "EX_etoh_e", "EX_glyc_e"]
-                substrates = [rxn for rxn in st.session_state.custom_medium.keys() if rxn in carbon_sources]
-                
+
                 # User input for biomass concentration
                 st.subheader("📊 TRY Benchmarking Metrics")
                 col1, col2 = st.columns([2, 1])
@@ -262,7 +258,7 @@ with tab_overview:
                 yield_val, rate, titer = compute_try(
                     st.session_state.optimized_model, 
                     selected_reaction_id, 
-                    substrates, 
+                    st.session_state.custom_medium, 
                     biomass_concentration
                 )
                 
