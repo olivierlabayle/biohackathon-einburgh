@@ -7,7 +7,7 @@ import pandas as pd
 from build_model import create_carve_model
 from model_engine import load_fungal_model, run_fba_simulation, get_sensitivity_data
 from visuals import plot_growth_bar, plot_sensitivity
-from optimise import run_optimization, optimize_model
+from optimise import run_optimization, optimize_model, compute_try
 from media import MEDIA
 from add_oxygen import add_oxygen_to_model
 
