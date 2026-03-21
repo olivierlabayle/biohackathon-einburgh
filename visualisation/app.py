@@ -10,6 +10,9 @@ from visuals import plot_growth_bar, plot_sensitivity
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
 
+os.path.isdir(MODEL_DIR) or os.makedirs(MODEL_DIR)
+os.path.isdir(FASTA_DIR) or os.makedirs(FASTA_DIR)
+
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="BioOptimize: Fungi Edition",
@@ -73,59 +76,58 @@ with st.sidebar:
                 "GCF_000182925.2"
             ]
         )
+        fasta_file = None
         st.success(f"Ready to load: **{selected_strain_name.split(' ')[0]}**")
 
     else:
-        st.info("Don't have a genome? You can search and download one from [FungiDB](https://fungidb.org/fungidb/app/search/genomic-sequence/SequencesByTaxon).")
-
-        genome_file = st.file_uploader(
+        st.info("Otherwise, upload your own genome file in FASTA format below.")
+        selected_strain_name = st.text_input("Strain Name", value="Custom_Strain")
+        uploaded_file = st.file_uploader(
             "Upload Genome (Required)",
-            type=["fasta", "gbk", "fna"],
+            type=["fasta", "faa", "fna"],
             help="Drag and drop your .fasta or .gbk file here."
         )
 
-        annotation_file = st.file_uploader(
-            "Upload Annotation (Optional)",
-            type=["gff", "tsv"],
-            help="Adding gene annotations (.gff) greatly improves the metabolic model's accuracy."
-        )
+        fasta_file = f"{FASTA_DIR}/{selected_strain_name}.fasta"
 
-        if genome_file:
-            selected_strain_name = genome_file.name
+        if uploaded_file is not None:
+            with open(fasta_file, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success("File uploaded and saved!")
+        else:
+            st.info("Please upload a file to proceed.")
+
 
     st.divider()
 
     st.subheader("2. Run Pipeline")
     if st.button("🚀 Build Metabolic Model"):
-        if input_method == "Custom Upload" and not genome_file:
-            st.error("Please upload a genome file first!")
-        else:
-            with st.spinner(f"Reconstructing metabolic network for {selected_strain_name}..."):
-                # Simulating the backend GEM pipeline processing time
-                time.sleep(2.5)
-                try:
-                    model_file = f"{MODEL_DIR}/model.{selected_strain_name}.xml"
-                    if os.path.exists(model_file):
-                        st.info("Model already exists. Loading from disk...")
-                        model = read_sbml_model(model_file)
-                    else:
-                        st.info("Model not found. Creating a new one...")
-                        model = create_carve_model(selected_strain_name, model_file)
+        with st.spinner(f"Reconstructing metabolic network for {selected_strain_name}..."):
+            # Simulating the backend GEM pipeline processing time
+            time.sleep(2.5)
+            try:
+                model_file = f"{MODEL_DIR}/model.{selected_strain_name}.xml"
+                if os.path.exists(model_file):
+                    st.info("Model already exists. Loading from disk...")
+                    model = read_sbml_model(model_file)
+                else:
+                    st.info("Model not found. Creating a new one...")
+                    model = create_carve_model(selected_strain_name, fasta_file, model_file)
 
-                    baseline_solution = run_fba_simulation(model, {})
-                    st.session_state.model_obj = model
-                    st.session_state.last_solution = baseline_solution
-                    st.session_state.sensitivity_df = get_sensitivity_data(model, "EX_glc__D_e")
-                    st.session_state.model_built = True
-                    st.session_state.build_error = None
-                    st.success("Model loaded and baseline simulation completed.")
-                except Exception as exc:
-                    st.session_state.model_built = False
-                    st.session_state.model_obj = None
-                    st.session_state.last_solution = None
-                    st.session_state.sensitivity_df = pd.DataFrame()
-                    st.session_state.build_error = str(exc)
-                    st.error(f"Model build failed: {exc}")
+                baseline_solution = run_fba_simulation(model, {})
+                st.session_state.model_obj = model
+                st.session_state.last_solution = baseline_solution
+                st.session_state.sensitivity_df = get_sensitivity_data(model, "EX_glc__D_e")
+                st.session_state.model_built = True
+                st.session_state.build_error = None
+                st.success("Model loaded and baseline simulation completed.")
+            except Exception as exc:
+                st.session_state.model_built = False
+                st.session_state.model_obj = None
+                st.session_state.last_solution = None
+                st.session_state.sensitivity_df = pd.DataFrame()
+                st.session_state.build_error = str(exc)
+                st.error(f"Model build failed: {exc}")
 
 # --- MAIN DASHBOARD ---
 st.title("Media Optimization Workspace")
