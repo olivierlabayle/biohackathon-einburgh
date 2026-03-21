@@ -12,8 +12,8 @@ docker run \
     --platform linux/amd64 \
     -it \
     --rm \
-    -p "$STREAMLIT_PORT:8501" \
-    -v "$PROJECT_ROOT:/app/" \
+    -p "8501:8501" \
+    -v "$(PWD):/app/" \
     -e STREAMLIT_SERVER_PORT=8501 \
     -e STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
     biohackathon-einburgh:latest \
