@@ -2,15 +2,28 @@ import cobra
 import pandas as pd
 from cobra.io import load_model
 
-def load_fungal_model(strain_name):
+from gem_io import load_user_gem
+
+
+def load_template_model(label: str) -> cobra.Model:
     """
-    In a real app, this would trigger a reconstruction pipeline.
-    For the MVP, we load a high-quality template model (e.g., iML1515 or a fungal core).
+    Placeholder GEM: loads COBRApy textbook model; names it after the strain / input label.
+    Full genome-scale reconstruction from protein FASTA is not implemented yet.
     """
-    # Loading a demo model included with COBRApy for functional testing
     model = load_model("textbook")
-    model.name = strain_name
+    model.name = str(label)[:200]
     return model
+
+
+def load_fungal_model(strain_name: str) -> cobra.Model:
+    """Backward-compatible alias for ``load_template_model``."""
+    return load_template_model(strain_name)
+
+
+def load_model_from_gem_upload(uploaded_file) -> cobra.Model:
+    """Load a user-provided SBML/XML or JSON COBRA model."""
+    return load_user_gem(uploaded_file)
+
 
 def run_fba_simulation(model, diet_updates):
     """
@@ -25,6 +38,7 @@ def run_fba_simulation(model, diet_updates):
 
         solution = model.optimize()
         return solution
+
 
 def get_sensitivity_data(model, nutrient_id, max_flux=20, step=2):
     """Calculates how growth changes as a specific nutrient varies."""
