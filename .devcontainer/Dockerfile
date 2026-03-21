@@ -14,4 +14,4 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.24/diamond-l
     && tar xzf diamond-linux64.tar.gz \
     && mv diamond /usr/local/bin/
 
-WORKDIR /opt/biohackathon
+WORKDIR /app

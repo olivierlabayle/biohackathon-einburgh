@@ -1,6 +1,32 @@
 # biohackathon-einburgh
 Repository for the 2026 Biohackathon in Edinburgh
 
+## Build the Docker Image
+
+```bash
+docker build --platform linux/amd64 -t biohackathon-einburgh:latest -f .devcontainer/Dockerfile .
+```
+
+```bash
+docker run \
+    --platform linux/amd64 \
+    -it \
+    --rm \
+    -p "$STREAMLIT_PORT:8501" \
+    -v "$PROJECT_ROOT:/app/" \
+    -e STREAMLIT_SERVER_PORT=8501 \
+    -e STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    biohackathon-einburgh:latest \
+    /bin/bash
+```
+
+Then run:
+
+```
+uv sync
+uv run streamlit run visualisation/app.py
+```
+
 ## Tasks
 
 

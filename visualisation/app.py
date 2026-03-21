@@ -48,8 +48,8 @@ st.markdown("""
 # --- SESSION STATE INITIALIZATION ---
 if 'model_built' not in st.session_state:
     st.session_state.model_built = False
-if 'model_obj' not in st.session_state:
-    st.session_state.model_obj = None
+if 'model' not in st.session_state:
+    st.session_state.model = None
 if 'last_solution' not in st.session_state:
     st.session_state.last_solution = None
 if 'sensitivity_df' not in st.session_state:
@@ -117,8 +117,8 @@ with st.sidebar:
                     st.info("Model not found. Creating a new one...")
                     model = create_carve_model(selected_strain_name, fasta_file, model_file)
 
-                baseline_solution = run_fba_simulation(model, {})
-                st.session_state.model_obj = model
+                baseline_solution = model.optimize()
+                st.session_state.model = model
                 st.session_state.last_solution = baseline_solution
                 st.session_state.sensitivity_df = get_sensitivity_data(model, "EX_glc__D_e")
                 st.session_state.model_built = True
@@ -126,7 +126,7 @@ with st.sidebar:
                 st.success("Model loaded and baseline simulation completed.")
             except Exception as exc:
                 st.session_state.model_built = False
-                st.session_state.model_obj = None
+                st.session_state.model = None
                 st.session_state.last_solution = None
                 st.session_state.sensitivity_df = pd.DataFrame()
                 st.session_state.build_error = str(exc)
@@ -151,7 +151,7 @@ with tab_overview:
     if st.session_state.model_built:
         st.success(f"Metabolic Model successfully generated for: **{selected_strain_name}**")
 
-        model = st.session_state.model_obj
+        model = st.session_state.model
         solution = st.session_state.last_solution
         growth_rate = 0.0
         if solution is not None and getattr(solution, "status", "") == "optimal":
@@ -164,16 +164,18 @@ with tab_overview:
         col4.metric("Predicted Max Growth", f"{growth_rate:.3f} h⁻¹", "Baseline Media")
 
         selected_reaction_name = st.selectbox("Select a reaction to optimize:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="reaction_select")
-        if selected_reaction_name:
+        selected_medium_name = st.selectbox("Select a medium", options=MEDIA.keys(), index=0, key="medium_select")
+
+        if selected_reaction_name and selected_medium_name:
             selected_reaction_id = next(rxn.id for rxn in model.reactions if rxn.name == selected_reaction_name)
             selected_reaction = model.reactions.get_by_id(selected_reaction_id)
             st.write(f"**Reaction ID:** {selected_reaction.id}")
             st.write(f"**Equation:** {selected_reaction.build_reaction_string()}")
             st.write(f"**Associated Genes:** {', '.join(gene.id for gene in selected_reaction.genes) if selected_reaction.genes else 'None'}")
 
-            optimized_model, growth_rate = optimize_model(model, selected_reaction_id, direction="max")
+            optimized_model, growth_rate = optimize_model(model, selected_reaction_id, None, direction="max")
 
-            st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}**")
+            st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {growth_rate:.3f} h⁻¹**")
 
         
             st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
@@ -207,13 +209,13 @@ with tab_optimizer:
         )
 
         new_solution = run_fba_simulation(
-            st.session_state.model_obj,
+            st.session_state.model,
             {"EX_glc__D_e": -glucose_uptake}
         )
         st.session_state.last_solution = new_solution
         sensitivity_max = max(2, int(glucose_uptake * 2))
         st.session_state.sensitivity_df = get_sensitivity_data(
-            st.session_state.model_obj,
+            st.session_state.model,
             "EX_glc__D_e",
             max_flux=sensitivity_max,
             step=2
