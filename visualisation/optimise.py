@@ -25,16 +25,16 @@ def optimize_model(model: cobra.Model, medium: dict, objective: str, direction: 
     Returns:
         cobra.Model: The optimized model.
     """
-    with model:
-        model.medium = medium
-        model.objective = objective
-        model.objective_direction = direction
-        solution = model.optimize()
-        max_growth = solution.objective_value
+    
+    model.medium = medium
+    model.objective = objective
+    model.objective_direction = direction
+    solution = model.optimize()
+    max_growth = solution.objective_value
 
-    return solution, max_growth
+    return model, max_growth
 
-def compute_try(model: cobra.Model, product_id: str, substrates: str, biomass_concentration: float):
+def compute_try(model: cobra.Model, product_id: str, substrates: list, biomass_concentration: float):
     """
     Compute TRY
 
@@ -45,7 +45,7 @@ def compute_try(model: cobra.Model, product_id: str, substrates: str, biomass_co
     """
 
     print(f"Computing TRY for product: {product_id}, substrate: {substrates}, biomass concentration: {biomass_concentration}")
-
+    
     # 1. Yield (Y_SP)
     # Yield = Flux of Product / |Flux of Substrate|
     product_flux = model.reactions.get_by_id(product_id).flux

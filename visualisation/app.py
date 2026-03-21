@@ -216,12 +216,84 @@ with tab_overview:
                     st.rerun()
 
                 if st.button("Run optimisation"):
-                    # COBRApy handles the assignment
-                    with model:
-                        optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
-                        st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
-                        st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")            
+                    
+                    optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
+                    st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
+                    st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
+                    
+                    # Store optimized model in session state for TRY computation
+                    st.session_state.optimized_model = optimized_model
+                    st.session_state.optimized_growth = optimized_growth
 
+            # -- Benchmarking TRY --
+            # Compute TRY metrics (Titer, Rate, Yield) for the optimized model
+            if st.session_state.model_built and 'optimized_model' in st.session_state:
+        
+                # Extract substrates from current custom medium (carbon sources)
+                # Common carbon source exchange reactions in metabolic models
+                carbon_sources = ["EX_glc__D_e", "EX_sucr_e", "EX_fru_e", "EX_gal_e", "EX_malt_e", "EX_lac__D_e", "EX_ac_e", "EX_etoh_e", "EX_glyc_e"]
+                substrates = [rxn for rxn in st.session_state.custom_medium.keys() if rxn in carbon_sources]
+                
+                # User input for biomass concentration
+                st.subheader("📊 TRY Benchmarking Metrics")
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    st.markdown("**Biomass Concentration (gDW/L):**")
+                with col2:
+                    biomass_concentration = st.number_input(
+                        "Biomass", 
+                        min_value=0.01, 
+                        max_value=50.0, 
+                        value=0.5, 
+                        step=0.1, 
+                        format="%.2f",
+                        label_visibility="collapsed"
+                    )
+                    
+                # Compute TRY metrics
+                yield_val, rate, titer = compute_try(
+                    st.session_state.optimized_model, 
+                    selected_reaction_id, 
+                    substrates, 
+                    biomass_concentration
+                )
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric(
+                        "Yield", 
+                        f"{yield_val:.4f} mol/mol",
+                        help="Product produced per substrate consumed"
+                    )
+                
+                with col2:
+                    st.metric(
+                        "Rate", 
+                        f"{rate:.4f} mmol/gDW/h",
+                        help="Productivity of the cell factory"
+                    )
+                
+                with col3:
+                    st.metric(
+                        "Titer (1h)", 
+                        f"{titer:.4f} mmol/L",
+                        help="Product concentration after 1 hour"
+                    )
+                
+                # TRY explanation
+                with st.expander("ℹ️ About TRY Metrics"):
+                    st.markdown("""
+                    **TRY** metrics evaluate production costs in microbial biotechnology:
+                    
+                    - **Yield**: Amount of product produced per amount of substrate used (mol/mol)
+                    - **Rate**: Productivity of the cell factory (mmol/gDW/h)  
+                    - **Titer**: Final concentration of product in fermentation (mmol/L)
+                    
+                    *Reference: Konzock & Nielsen, Trends in Biotechnology, 2024*
+                    """)
+            else:
+                st.info("👈 Build and optimize a model to see TRY benchmarking metrics.")
 
     else:
         if st.session_state.build_error:
