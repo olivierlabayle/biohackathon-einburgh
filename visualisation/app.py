@@ -258,7 +258,7 @@ with tab_overview:
             
 
             # --- Display and Apply Medium ---
-            if st.session_state.custom_medium:
+            if len(st.session_state.custom_medium) > 0:
                 st.markdown("### **Current Recipe**")
                 
                 # Create sliders for each component
@@ -281,7 +281,7 @@ with tab_overview:
                             f"Flux for {rxn_id}",
                             min_value=0.0,
                             max_value=1000.0,
-                            value=current_flux,
+                            value=float(current_flux),
                             step=1.0,
                             key=f"slider_{rxn_id}",
                             label_visibility="collapsed"
@@ -406,11 +406,18 @@ with tab_overview:
                         st.error(f"Error generating minimal medium: {e}")
                         st.session_state.optimized_medium = {}
 
-
+                    
+                    
                     if st.button("Save as Best Model"):
                         st.session_state.prev_model = temp_model.copy()
                         st.session_state.prev_medium = st.session_state.optimized_medium.copy()
                         st.session_state.prev_growth = st.session_state.optimized_growth
+                        st.rerun()
+                    
+                    if st.button("Use as current recipe"):
+                        # Convert flux values to float to avoid JSON serialization issues
+                        st.session_state.custom_medium = {k: float(v) for k, v in dict(st.session_state.optimized_medium)}
+
                         st.rerun()
                 else:
                     st.info("👈 Build and optimize a model to see TRY benchmarking metrics.")
