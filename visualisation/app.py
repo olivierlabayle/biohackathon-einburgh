@@ -260,35 +260,56 @@ with tab_overview:
             # --- Display and Apply Medium ---
             if st.session_state.custom_medium:
                 st.markdown("### **Current Recipe**")
-                # Convert reaction IDs to names for display
-                display_medium = {}
-                for rxn_id, flux in st.session_state.custom_medium.items():
+                
+                # Create sliders for each component
+                updated_medium = {}
+                for rxn_id, current_flux in st.session_state.custom_medium.items():
                     try:
                         rxn = model.reactions.get_by_id(rxn_id)
-                        display_medium[rxn.name] = flux
+                        display_name = rxn.name
                     except:
-                        display_medium[rxn_id] = flux
-                st.table(display_medium)
-
+                        display_name = rxn_id
+                    
+                    # Create two columns for name and slider
+                    name_col, slider_col = st.columns([1, 2])
+                    
+                    with name_col:
+                        st.write(f"**{display_name}**")
+                    
+                    with slider_col:
+                        new_flux = st.slider(
+                            f"Flux for {rxn_id}",
+                            min_value=0.0,
+                            max_value=1000.0,
+                            value=current_flux,
+                            step=1.0,
+                            key=f"slider_{rxn_id}",
+                            label_visibility="collapsed"
+                        )
+                        updated_medium[rxn_id] = new_flux
+                
+                # Update the session state with new slider values
+                st.session_state.custom_medium = updated_medium
                 
                 if st.button("Clear Medium", type="secondary"):
                     st.session_state.custom_medium = {}
                     st.rerun()
-
-                if st.button("Run optimisation"):
-                    
-                    optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
-                    st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
-                    st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
-                    
-                    # Store optimized model in session state for TRY computation
-                    st.session_state.optimized_model = optimized_model.copy()
-                    st.session_state.optimized_growth = optimized_growth
+                
+                # Run optimisation automatically when media changes
+                if st.session_state.custom_medium:
+                    with st.spinner("Running optimisation..."):
+                        optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
+                        st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
+                        st.success(f"Model successfully optimized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
+                        
+                        # Store optimized model in session state for TRY computation
+                        st.session_state.optimized_model = optimized_model.copy()
+                        st.session_state.optimized_growth = optimized_growth
 
 
             curr_model, prev_model = st.tabs([
                 "Current model",
-                "Previous model"
+                "Best model"
             ])
 
             # --- TAB 1: MODEL OVERVIEW ---
@@ -386,7 +407,7 @@ with tab_overview:
                         st.session_state.optimized_medium = {}
 
 
-                    if st.button("Save as Previous Model"):
+                    if st.button("Save as Best Model"):
                         st.session_state.prev_model = temp_model.copy()
                         st.session_state.prev_medium = st.session_state.optimized_medium.copy()
                         st.session_state.prev_growth = st.session_state.optimized_growth
@@ -448,10 +469,10 @@ with tab_overview:
                         *Reference: Konzock & Nielsen, Trends in Biotechnology, 2024*
                         """)
 
-                    st.markdown("### **Previous Recipe**")
+                    st.markdown("### **Best Recipe**")
                     
                     if st.session_state.prev_medium is None or (hasattr(st.session_state.prev_medium, 'empty') and st.session_state.prev_medium.empty):
-                        st.error("No previous medium available. Please save a model first.")
+                        st.error("No best medium available. Please save a model first.")
                     else:
                         # Convert to DataFrame and sort, then convert reaction IDs to names for display
                         prev_optimal_df = st.session_state.prev_medium.reset_index()
@@ -463,7 +484,7 @@ with tab_overview:
                         prev_optimal_df = prev_optimal_df.sort_values(by='Flux', ascending=False)
                         st.table(prev_optimal_df[['Exchange Reaction', 'Flux']])
                 else:
-                    st.info("👈 Build and optimize another model to see TRY benchmarking metrics of the previous model.")
+                    st.info("👈 Build and optimize another model to see TRY benchmarking metrics of the best model.")
 
     else:
         if st.session_state.build_error:
