@@ -10,6 +10,7 @@ from visuals import plot_growth_bar, plot_sensitivity
 from optimise import run_optimization, optimize_model, compute_try
 from media import MEDIA
 from add_oxygen import add_oxygen_to_model
+from network import show_graph, cobra_to_bipartite_graph, extract_k_hop_subgraph
 
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
@@ -154,8 +155,9 @@ By mapping out every metabolic reaction, we can computationally predict which nu
 """)
 
 # --- TABS ---
-tab_overview, tab_report = st.tabs([
+tab_overview, tab_network, tab_report = st.tabs([
     "📊 Model Overview",
+    "🔬 Network Visualization",
     "📝 Final Report"
 ])
 
@@ -315,6 +317,48 @@ with tab_overview:
         if st.session_state.build_error:
             st.error(f"Last build error: {st.session_state.build_error}")
         st.info("👈 Please select a strain or upload a genome in the sidebar, then click 'Build Metabolic Model'.")
+
+# --- TAB 2: Network visualization ---
+with tab_network:
+    if st.session_state.model_built:
+        st.subheader("Metabolic Network Visualization")
+        st.write("Explore the metabolic network around your selected reaction.")
+
+        model = st.session_state.model
+        G = cobra_to_bipartite_graph(model)
+
+        reaction_tab, metabolite_tab = st.columns([1, 1])
+        with reaction_tab:
+            network_reaction_name = st.selectbox(
+                "Select a reaction to visualize its local network:",
+                options=[None] + [rxn.name for rxn in model.reactions],
+                index=0,
+                key="network_reaction_select"   
+            )
+        with metabolite_tab:
+            network_metabolite_name = st.selectbox(
+                "Or, select a metabolite to visualize its local network:",
+                options=[None] + [met.name for met in model.metabolites],
+                index=0,
+                key="network_metabolite_select"   
+            )
+
+
+        k = st.number_input("Select a distance to explore", min_value=0, max_value=10, value=2, step=1)
+
+        if network_reaction_name or network_metabolite_name:
+            if network_reaction_name:
+                center_node = next((rxn.id for rxn in model.reactions if rxn.name == network_reaction_name), None)
+            else:
+                center_node = next((met.id for met in model.metabolites if met.name == network_metabolite_name), None)
+
+            st.write(f"Selected node: {center_node}")
+            subgraph = extract_k_hop_subgraph(G, center_node, k=k)
+            show_graph(subgraph)
+        else:
+            st.info("Select a reaction or metabolite from the dropdown in the Model Overview tab to visualize its local network.")
+    else:
+        st.info("👈 Build a model in the sidebar and select a reaction in the Model Overview tab to visualize the metabolic network.")
 
 # --- TAB 2: MEDIA OPTIMIZER ---
 # with tab_optimizer:
