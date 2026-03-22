@@ -11,6 +11,12 @@ from optimise import run_optimization, optimize_model, compute_try
 from media import MEDIA
 from add_oxygen import add_oxygen_to_model
 from network import show_graph, cobra_to_bipartite_graph, extract_k_hop_subgraph
+from sequence_utils import (
+    detect_sequence_type,
+    render_download_button,
+    translate_dna_to_protein,
+)
+
 
 MODEL_DIR = "/app/data/models"
 FASTA_DIR = "/app/data/fastas"
