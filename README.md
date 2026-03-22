@@ -9,21 +9,18 @@ A comprehensive web application for creating, optimizing, and visualizing genome
 - **Advanced Optimization**: Flux Balance Analysis (FBA) with TRY metrics (Titer, Rate, Yield) for production optimization
 - **Media Composition**: Custom nutrient media design with sensitivity analysis
 - **Interactive Network Visualization**: Bipartite metabolic network graphs with customizable subgraph extraction
-- **Professional UI**: Dark/light theme toggle with responsive design
 - **Docker Support**: Complete containerization for reproducible deployments
 
 
-# How to run
+# Setup
 
-## 1. Setup
-
-### Build the Docker Image
+### 1. Build the Docker Image
 
 ```bash
 docker build --platform linux/amd64 -t biohackathon-einburgh:latest -f .devcontainer/Dockerfile .
 ```
 
-### Run the Docker Container
+### 2. Run the Docker Container
 
 ```bash
 docker run \
@@ -38,17 +35,17 @@ docker run \
     /bin/bash
 ```
 
-### Run the Streamlit App
+### 3. Run the Streamlit App
 
 ```
 uv sync
 uv run streamlit run visualisation/app.py
 ```
 
-## 2. Use GEMitize
+# Use GEMitize
 
 
-### Choose an input genome
+### 1. Choose an input genome
 - 1) **Default option**: Choose from four strains in the library:
   - Neurospora crassa. OR74A
   - Rhizopus microsporus var. microspores. ATCC 52814
@@ -58,10 +55,16 @@ uv run streamlit run visualisation/app.py
 - 2) **Customed strain/genome**: 
 
 
-### Build a GEM
+### 2. Build a GEM
 - **Automated**: Just click 'Build Metabolic Model': the platform will automatically build a GEM model from the input genome using the selected database. 
 
-### GEM optimization
+### 3. Network Visualization
+From the Network Visualization tab:
+- Visualize the metabolic network
+- Interact with the network
+- Download the network
+
+### 4. GEM optimization
 From the Model Overview tab (default):
 - 1. Select reaction to optimize (for example, Biomass reaction)
 - 2. Compose your media by adding nutrients.
@@ -70,13 +73,7 @@ From the Model Overview tab (default):
     - TRY (Titer, Rate, Yield) metrics.
     - Minimal media composition required for optimal production.
 
-### Network Visualization
-From the Network Visualization tab:
-- Visualize the metabolic network
-- Interact with the network
-- Download the network
-
-### Download 
+### 5. Download 
 From the Model Overview tab:
 - Download the GEM model
 
