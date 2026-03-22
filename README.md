@@ -46,13 +46,17 @@ uv run streamlit run visualisation/app.py
 
 
 ### 1. Choose an input genome
-- 1) **Default option**: Choose from four strains in the library:
-  - Neurospora crassa. OR74A
-  - Rhizopus microsporus var. microspores. ATCC 52814
-  - Aspergillus niger. ATCC 13496
-  - Aspergillus oryzae. RIB40
+1) **Default option**: Choose from four strains in the library:
+- Neurospora crassa. OR74A
+- Rhizopus microsporus var. microspores. ATCC 52814
+- Aspergillus niger. ATCC 13496
+- Aspergillus oryzae. RIB40
 
-- 2) **Customed strain/genome**: 
+2) **Custom input**:
+- Upload a protein FASTA file
+- *Do not have a protein FASTA file?* 
+No problem! You can upload a genome FASTA file and the platform will automatically translate it to protein sequences.
+Use the created protein FASTA file for building the model.
 
 
 ### 2. Build a GEM
@@ -66,10 +70,10 @@ From the Network Visualization tab:
 
 ### 4. GEM optimization
 From the Model Overview tab (default):
-- 1. Select reaction to optimize (for example, Biomass reaction)
-- 2. Compose your media by adding nutrients.
-- 3. Optimize to maximize the selected reaction!
-- 4. Display results:
+1. Select reaction to optimize (for example, Biomass reaction)
+2. Compose your media by adding nutrients.
+3. Optimize to maximize the selected reaction!
+4. Display results:
     - TRY (Titer, Rate, Yield) metrics.
     - Minimal media composition required for optimal production.
 
