@@ -1,24 +1,20 @@
 import cobra
+import re
 import streamlit as st
 import os
-from cobra.io import read_sbml_model
 import time
+from cobra.io import read_sbml_model
 import pandas as pd
 from build_model import create_carve_model
 from model_engine import load_fungal_model, run_fba_simulation, get_sensitivity_data
 from visuals import plot_growth_bar, plot_sensitivity
 from optimise import run_optimization, optimize_model
 from media import MEDIA
-from add_oxygen import add_oxygen_to_model
-
-# --- NEW FEATURE (currently being integrated into the web app) ---
-# Provides DNA vs protein detection, DNA-to-protein translation, and a
-# download button for the translated protein FASTA. See sequence_utils.py.
+# from add_oxygen import add_oxygen_to_model
 from sequence_utils import (
     detect_sequence_type,
-    translate_dna_to_protein,
-    prepare_fasta_for_carveme,
     render_download_button,
+    translate_dna_to_protein,
 )
 
 MODEL_DIR = "/app/data/models"
@@ -115,6 +111,23 @@ with st.sidebar:
             with open(fasta_file, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             st.success("File uploaded and saved!")
+            raw_bytes = uploaded_file.getbuffer().tobytes()
+            try:
+                kind = detect_sequence_type(raw_bytes)
+                protein_bytes = (
+                    translate_dna_to_protein(raw_bytes) if kind == "dna" else raw_bytes
+                )
+                safe = re.sub(r"[^\w\-.]+", "_", selected_strain_name.strip()) or "strain"
+                st.caption(
+                    f"Sequence type: **{kind.upper()}** — CarveMe uses protein FASTA (.faa)."
+                )
+                render_download_button(
+                    "Download protein FASTA (.faa)",
+                    f"{safe}.faa",
+                    protein_bytes,
+                )
+            except ValueError as err:
+                st.warning(str(err))
         else:
             st.info("Please upload a file to proceed.")
 
@@ -190,7 +203,7 @@ with tab_overview:
         # Select a Reaction and Minimum Growth Rate for Media Optimization
         st.markdown("""**Obtain a minimal medium for your reaction**""")
         selected_reaction_name = st.selectbox("Select a reaction to optimise:", options=[None] + [rxn.name for rxn in model.reactions], index=0, key="objective_select")
-        
+
 
         # Find the minimum media for the selected reaction and growth rate
         if selected_reaction_name:
@@ -205,13 +218,13 @@ with tab_overview:
             st.markdown("""**Build a media recipe**""")
             # --- Input Row ---
             col1, col2, col3 = st.columns([1, 1, 1])
-            
+
             with col1:
                 selected_exchange_name = st.selectbox("Select an exchange reaction:", options=[None] + [rxn.name for rxn in model.exchanges], index=0, key="exchanges_select")
 
             with col2:
                 flux_value = st.number_input("Uptake Rate:", min_value=-1000.0, value=10.0, step=1.0)
-            
+
             with col3:
                 if st.button("Add to Medium"):
                     st.session_state.custom_medium[selected_exchange_name] = flux_value
@@ -220,7 +233,7 @@ with tab_overview:
             if st.session_state.custom_medium:
                 st.markdown("### **Current Recipe**")
                 st.table(st.session_state.custom_medium)
-                
+
                 if st.button("Clear Medium", type="secondary"):
                     st.session_state.custom_medium = {}
                     st.rerun()
@@ -230,8 +243,8 @@ with tab_overview:
                     with model:
                         optimized_model, optimized_growth = optimize_model(model, medium=st.session_state.custom_medium, objective=selected_reaction_id, direction="max")
                         st.write(f"**Growth Rate (Growth Rate):** {optimized_growth:.4f}")
-                        st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")            
-        
+                        st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
+
             # st.plotly_chart(plot_growth_bar(growth_rate), use_container_width=True)
 
         st.subheader("Network Confidence")
