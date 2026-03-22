@@ -1,4 +1,5 @@
 import cobra
+import re
 import streamlit as st
 import os
 from cobra.io import read_sbml_model
@@ -115,6 +116,24 @@ with st.sidebar:
             with open(fasta_file, "wb") as f:
                 f.write(uploaded_file.getbuffer())
             st.success("File uploaded and saved!")
+            raw_bytes = uploaded_file.getbuffer().tobytes()
+            try:
+                kind = detect_sequence_type(raw_bytes)
+                custom_upload_sequence_kind = kind
+                protein_bytes = (
+                    translate_dna_to_protein(raw_bytes) if kind == "dna" else raw_bytes
+                )
+                safe = re.sub(r"[^\w\-.]+", "_", selected_strain_name.strip()) or "strain"
+                st.caption(
+                    f"Sequence type: **{kind.upper()}** — CarveMe uses protein FASTA (.faa)."
+                )
+                render_download_button(
+                    "Download protein FASTA (.faa)",
+                    f"{safe}.faa",
+                    protein_bytes,
+                )
+            except ValueError as err:
+                st.warning(str(err))
         else:
             st.info("Please upload a file to proceed.")
 
@@ -123,38 +142,47 @@ with st.sidebar:
 
     st.subheader("2. Run Pipeline")
     if st.button("Build Metabolic Model"):
-        with st.spinner(f"Reconstructing metabolic network for {selected_strain_name}..."):
-            # Simulating the backend GEM pipeline processing time
-            time.sleep(2.5)
-            try:
-                model_file = f"{MODEL_DIR}/model.{selected_strain_name}.xml"
-                if os.path.exists(model_file):
-                    st.info("Model already exists. Loading from disk...")
-                    model = read_sbml_model(model_file)
-                else:
-                    st.info("Model not found. Creating a new one...")
-                    model = create_carve_model(selected_strain_name, fasta_file, model_file)
+        if (
+            input_method == "Custom Upload"
+            and custom_upload_sequence_kind == "dna"
+        ):
+            st.info(
+                "This is a BETA feature currently being tested, expected to be "
+                "integrated into the GEMtimize web app soon."
+            )
+        else:
+            with st.spinner(f"Reconstructing metabolic network for {selected_strain_name}..."):
+                # Simulating the backend GEM pipeline processing time
+                time.sleep(2.5)
+                try:
+                    model_file = f"{MODEL_DIR}/model.{selected_strain_name}.xml"
+                    if os.path.exists(model_file):
+                        st.info("Model already exists. Loading from disk...")
+                        model = read_sbml_model(model_file)
+                    else:
+                        st.info("Model not found. Creating a new one...")
+                        model = create_carve_model(selected_strain_name, fasta_file, model_file)
 
-                add_oxygen_to_model(model)
+                    add_oxygen_to_model(model)
 
-                baseline_solution = model.optimize()
-                st.session_state.model = model
-                st.session_state.last_solution = baseline_solution
-                st.session_state.sensitivity_df = get_sensitivity_data(model, "EX_glc__D_e")
-                st.session_state.model_built = True
-                st.session_state.build_error = None
-                st.session_state.model_file = model_file
-                st.session_state.custom_medium = {}
-                st.success("Model loaded and baseline simulation completed.")
-            except Exception as exc:
-                st.session_state.model_built = False
-                st.session_state.model = None
-                st.session_state.last_solution = None
-                st.session_state.model_file = None
-                st.session_state.sensitivity_df = pd.DataFrame()
-                st.session_state.build_error = str(exc)
-                st.session_state.custom_medium = {}
-                st.error(f"Model build failed: {exc}")
+                    baseline_solution = model.optimize()
+                    st.session_state.model = model
+                    st.session_state.last_solution = baseline_solution
+                    st.session_state.sensitivity_df = get_sensitivity_data(model, "EX_glc__D_e")
+                    st.session_state.model_built = True
+                    st.session_state.build_error = None
+                    st.session_state.model_file = model_file
+                    st.session_state.custom_medium = {}
+                    st.success("Model loaded and baseline simulation completed.")
+                except Exception as exc:
+                    st.session_state.model_built = False
+                    st.session_state.model = None
+                    st.session_state.last_solution = None
+                    st.session_state.model_file = None
+                    st.session_state.sensitivity_df = pd.DataFrame()
+                    st.session_state.build_error = str(exc)
+                    st.session_state.custom_medium = {}
+                    st.error(f"Model build failed: {exc}")
 
 # --- MAIN DASHBOARD ---
 st.title("Media Optimization Workspace")
