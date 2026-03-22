@@ -1,8 +1,10 @@
+import tempfile
+
 import cobra
 import re
 import streamlit as st
 import os
-from cobra.io import read_sbml_model
+from cobra.io import read_sbml_model, write_sbml_model
 import time
 import pandas as pd
 from build_model import create_carve_model
@@ -195,7 +197,7 @@ By mapping out every metabolic reaction, we can computationally predict which nu
 tab_overview, tab_network, tab_report = st.tabs([
     "📊 Model Overview",
     "🔬 Network Visualization",
-    "📝 Final Report"
+    "📝 Downloads"
 ])
 
 # --- TAB 1: MODEL OVERVIEW ---
@@ -583,7 +585,7 @@ with tab_network:
 # --- TAB 3: FINAL REPORT ---
 with tab_report:
     if st.session_state.model_built:
-        st.subheader("Download GEM (only available if new GEM built using custom input)")
+        st.subheader("Download Inital GEM")
         with open(st.session_state.model_file, "r") as f:
             st.download_button(
                 label="Download GEM",
@@ -593,3 +595,19 @@ with tab_report:
             )
     else:
         st.warning("Generate a model and tune your media to unlock the Final Report.")
+
+
+    if 'prev_model' in st.session_state and st.session_state.prev_model is not None:
+        st.subheader("Download Optimized GEM")
+        best_model_file = tempfile.NamedTemporaryFile(delete=False, suffix=".xml")
+        best_model_filename = best_model_file.name  # get the filename
+        best_model_file.close() 
+        write_sbml_model(st.session_state.prev_model, best_model_filename)
+
+        with open(best_model_filename, "r") as f:
+            st.download_button(
+                label="Download Optimized GEM",
+                data=f,
+                file_name="Optimized_GEM.xml",
+                mime="text/plain"
+            )
