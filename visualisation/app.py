@@ -243,19 +243,32 @@ with tab_overview:
             
             with col3:
                 if st.button("Add to Medium"):
-                    st.session_state.custom_medium[selected_exchange_name] = flux_value
+                    # Convert reaction name to reaction ID for proper medium handling
+                    if selected_exchange_name:
+                        exchange_reaction = next((rxn for rxn in model.exchanges if rxn.name == selected_exchange_name), None)
+                        if exchange_reaction:
+                            st.session_state.custom_medium[exchange_reaction.id] = flux_value
+                        else:
+                            st.error(f"Exchange reaction '{selected_exchange_name}' not found")
 
             with col4:
                 if st.button("Infinite Media"):
-                    st.session_state.custom_medium = {exchange.name: 1000.0 for exchange in model.exchanges}
+                    st.session_state.custom_medium = {exchange.id: 1000.0 for exchange in model.exchanges}
                     st.rerun()
             
 
             # --- Display and Apply Medium ---
             if st.session_state.custom_medium:
                 st.markdown("### **Current Recipe**")
-                st.table(st.session_state.custom_medium)
-
+                # Convert reaction IDs to names for display
+                display_medium = {}
+                for rxn_id, flux in st.session_state.custom_medium.items():
+                    try:
+                        rxn = model.reactions.get_by_id(rxn_id)
+                        display_medium[rxn.name] = flux
+                    except:
+                        display_medium[rxn_id] = flux
+                st.table(display_medium)
 
                 
                 if st.button("Clear Medium", type="secondary"):
@@ -269,86 +282,188 @@ with tab_overview:
                     st.success(f"Model successfully optmized for reaction: **{selected_reaction_name}: {optimized_growth:.3f} h⁻¹**")
                     
                     # Store optimized model in session state for TRY computation
-                    st.session_state.optimized_model = optimized_model
+                    st.session_state.optimized_model = optimized_model.copy()
                     st.session_state.optimized_growth = optimized_growth
 
-            # -- Benchmarking TRY --
-            # Compute TRY metrics (Titer, Rate, Yield) for the optimized model
-            if st.session_state.model_built and 'optimized_model' in st.session_state:
-        
 
-                # User input for biomass concentration
-                st.subheader("📊 TRY Benchmarking Metrics")
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    st.markdown("**Biomass Concentration (gDW/L):**")
-                with col2:
-                    biomass_concentration = st.number_input(
-                        "Biomass", 
-                        min_value=0.01, 
-                        max_value=50.0, 
-                        value=0.5, 
-                        step=0.1, 
-                        format="%.2f",
-                        label_visibility="collapsed"
+            curr_model, prev_model = st.tabs([
+                "Current model",
+                "Previous model"
+            ])
+
+            # --- TAB 1: MODEL OVERVIEW ---
+            with curr_model:
+                # -- Benchmarking TRY --
+                # Compute TRY metrics (Titer, Rate, Yield) for the optimized model
+                if st.session_state.model_built and 'optimized_model' in st.session_state:
+            
+
+                    # User input for biomass concentration
+                    st.subheader("📊 TRY Benchmarking Metrics")
+                    col1, col2 = st.columns([2, 1])
+                    with col1:
+                        st.markdown("**Biomass Concentration (gDW/L):**")
+                    with col2:
+                        st.session_state.biomass_concentration = st.slider(
+                            "Biomass", 
+                            min_value=0.01, 
+                            max_value=50.0, 
+                            value=0.5, 
+                            step=0.1, 
+                            format="%.2f",
+                            label_visibility="collapsed"
+                        )
+                        
+                    # Compute TRY metrics - re-optimize model to ensure correct fluxes
+                    temp_model = st.session_state.optimized_model.copy()
+                    temp_model.medium = st.session_state.custom_medium
+                    temp_model.objective = selected_reaction_id
+                    temp_model.objective_direction = "max"
+                    solution = temp_model.optimize()
+                    
+                    yield_val, rate, titer = compute_try(
+                        temp_model, 
+                        selected_reaction_id, 
+                        st.session_state.custom_medium, 
+                        st.session_state.biomass_concentration
                     )
                     
-                # Compute TRY metrics
-                yield_val, rate, titer = compute_try(
-                    st.session_state.optimized_model, 
-                    selected_reaction_id, 
-                    st.session_state.custom_medium, 
-                    biomass_concentration
-                )
-                
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.metric(
-                        "Yield", 
-                        f"{yield_val:.4f} mol/mol",
-                        help="Product produced per substrate consumed"
-                    )
-                
-                with col2:
-                    st.metric(
-                        "Rate", 
-                        f"{rate:.4f} mmol/gDW/h",
-                        help="Productivity of the cell factory"
-                    )
-                
-                with col3:
-                    st.metric(
-                        "Titer (1h)", 
-                        f"{titer:.4f} mmol/L",
-                        help="Product concentration after 1 hour"
-                    )
-                
-                # TRY explanation
-                with st.expander("ℹ️ About TRY Metrics"):
-                    st.markdown("""
-                    **TRY** metrics evaluate production costs in microbial biotechnology:
+                    col1, col2, col3 = st.columns(3)
                     
-                    - **Yield**: Amount of product produced per amount of substrate used (mol/mol)
-                    - **Rate**: Productivity of the cell factory (mmol/gDW/h)  
-                    - **Titer**: Final concentration of product in fermentation (mmol/L)
+                    with col1:
+                        st.metric(
+                            "Yield", 
+                            f"{yield_val:.4f} mol/mol",
+                            help="Product produced per substrate consumed"
+                        )
                     
-                    *Reference: Konzock & Nielsen, Trends in Biotechnology, 2024*
-                    """)
+                    with col2:
+                        st.metric(
+                            "Rate", 
+                            f"{rate:.4f} mmol/gDW/h",
+                            help="Productivity of the cell factory"
+                        )
+                    
+                    with col3:
+                        st.metric(
+                            "Titer (1h)", 
+                            f"{titer:.4f} mmol/L",
+                            help="Product concentration after 1 hour"
+                        )
+                    
+                    # TRY explanation
+                    with st.expander("ℹ️ About TRY Metrics"):
+                        st.markdown("""
+                        **TRY** metrics evaluate production costs in microbial biotechnology:
+                        
+                        - **Yield**: Amount of product produced per amount of substrate used (mol/mol)
+                        - **Rate**: Productivity of the cell factory (mmol/gDW/h)  
+                        - **Titer**: Final concentration of product in fermentation (mmol/L)
+                        
+                        *Reference: Konzock & Nielsen, Trends in Biotechnology, 2024*
+                        """)
 
-                st.markdown("### **Best Recipe**")
-                optimal_medium = cobra.medium.minimal_medium(st.session_state.optimized_model, st.session_state.optimized_growth)
-                
-                # Convert to DataFrame and sort
-                optimal_df = optimal_medium.reset_index()
-                optimal_df.columns = ['Exchange Reaction', 'Flux']
-                optimal_df = optimal_df.sort_values(by='Flux', ascending=False)
+                    st.markdown("### **Best Recipe**")
+                    # Generate minimal medium using the optimized model
+                    try:
+                        minimal_medium = cobra.medium.minimal_medium(temp_model, st.session_state.optimized_growth)
+                        if minimal_medium is None or minimal_medium.empty:
+                            st.error("Cannot generate optimized medium. Please try again.")
+                            st.session_state.optimized_medium = {}
+                        else:
+                            st.session_state.optimized_medium = minimal_medium
+                            # Convert to DataFrame and sort, then convert reaction IDs to names for display
+                            optimal_df = minimal_medium.reset_index()
+                            optimal_df.columns = ['Exchange Reaction', 'Flux']
+                            # Convert reaction IDs to names for better display
+                            optimal_df['Exchange Reaction'] = optimal_df['Exchange Reaction'].apply(
+                                lambda rxn_id: model.reactions.get_by_id(rxn_id).name if rxn_id in [r.id for r in model.reactions] else rxn_id
+                            )
+                            optimal_df = optimal_df.sort_values(by='Flux', ascending=False)
+                            st.table(optimal_df[['Exchange Reaction', 'Flux']])
+                    except Exception as e:
+                        st.error(f"Error generating minimal medium: {e}")
+                        st.session_state.optimized_medium = {}
 
-                
-                st.table(optimal_df[['Exchange Reaction', 'Flux']])
 
-            else:
-                st.info("👈 Build and optimize a model to see TRY benchmarking metrics.")
+                    if st.button("Save as Previous Model"):
+                        st.session_state.prev_model = temp_model.copy()
+                        st.session_state.prev_medium = st.session_state.optimized_medium.copy()
+                        st.session_state.prev_growth = st.session_state.optimized_growth
+                        st.rerun()
+                else:
+                    st.info("👈 Build and optimize a model to see TRY benchmarking metrics.")
+                    
+            with prev_model:
+                # -- Benchmarking TRY --
+                # Compute TRY metrics (Titer, Rate, Yield) for the optimized model
+                if st.session_state.model_built and 'prev_model' in st.session_state:
+                    
+                    # Re-optimize the previous model to ensure correct fluxes
+                    temp_prev_model = st.session_state.prev_model.copy()
+                    temp_prev_model.medium = st.session_state.prev_medium
+                    temp_prev_model.objective = selected_reaction_id
+                    temp_prev_model.objective_direction = "max"
+                    prev_solution = temp_prev_model.optimize()
+                    
+                    prev_yield, prev_rate, prev_titer = compute_try(
+                        temp_prev_model, 
+                        selected_reaction_id, 
+                        st.session_state.prev_medium, 
+                        st.session_state.biomass_concentration
+                    )
+                    
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.metric(
+                            "Yield", 
+                            f"{prev_yield:.4f} mol/mol",
+                            help="Product produced per substrate consumed"
+                        )
+                    
+                    with col2:
+                        st.metric(
+                            "Rate", 
+                            f"{prev_rate:.4f} mmol/gDW/h",
+                            help="Productivity of the cell factory"
+                        )
+                    
+                    with col3:
+                        st.metric(
+                            "Titer (1h)", 
+                            f"{prev_titer:.4f} mmol/L",
+                            help="Product concentration after 1 hour"
+                        )
+                    
+                    # TRY explanation
+                    with st.expander("ℹ️ About TRY Metrics"):
+                        st.markdown("""
+                        **TRY** metrics evaluate production costs in microbial biotechnology:
+                        
+                        - **Yield**: Amount of product produced per amount of substrate used (mol/mol)
+                        - **Rate**: Productivity of the cell factory (mmol/gDW/h)  
+                        - **Titer**: Final concentration of product in fermentation (mmol/L)
+                        
+                        *Reference: Konzock & Nielsen, Trends in Biotechnology, 2024*
+                        """)
+
+                    st.markdown("### **Previous Recipe**")
+                    
+                    if st.session_state.prev_medium is None or (hasattr(st.session_state.prev_medium, 'empty') and st.session_state.prev_medium.empty):
+                        st.error("No previous medium available. Please save a model first.")
+                    else:
+                        # Convert to DataFrame and sort, then convert reaction IDs to names for display
+                        prev_optimal_df = st.session_state.prev_medium.reset_index()
+                        prev_optimal_df.columns = ['Exchange Reaction', 'Flux']
+                        # Convert reaction IDs to names for better display
+                        prev_optimal_df['Exchange Reaction'] = prev_optimal_df['Exchange Reaction'].apply(
+                            lambda rxn_id: model.reactions.get_by_id(rxn_id).name if rxn_id in [r.id for r in model.reactions] else rxn_id
+                        )
+                        prev_optimal_df = prev_optimal_df.sort_values(by='Flux', ascending=False)
+                        st.table(prev_optimal_df[['Exchange Reaction', 'Flux']])
+                else:
+                    st.info("👈 Build and optimize another model to see TRY benchmarking metrics of the previous model.")
 
     else:
         if st.session_state.build_error:
