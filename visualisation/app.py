@@ -85,7 +85,10 @@ with st.sidebar:
         selected_strain_name = st.selectbox(
             "Select a default fungal strain:",
             [
-                "GCF_000182925.2"
+                "NC12",
+                "Rhimi",
+                "Aspory",
+                "Aspni"
             ]
         )
         fasta_file = None
