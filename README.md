@@ -1,4 +1,4 @@
-# GEMitize - GEM Creation and Optimization Platform
+# GEMtimize - GEM Creation and Optimization Platform
 
 A comprehensive web application for creating, optimizing, and visualizing genome-scale metabolic models (GEMs). Built with Streamlit and powered by COBRApy, CarveMe, and advanced metabolic modeling tools.
 
@@ -42,7 +42,7 @@ uv sync
 uv run streamlit run visualisation/app.py
 ```
 
-# Use GEMitize
+# Use GEMtimize
 
 
 ### 1. Choose an input genome
@@ -95,8 +95,8 @@ From the Model Overview tab:
 3) For the "uploading genome" interface, put the button in the middle, the user can simply drag their genome to upload it.
   
 **GEM Engine**
-1) already integrated in the website. The user only need to click the button to run it.  
-2) the user can also upload their GEM modelThe interface accepts standard metabolic model formats (SBML/XML, JSON).
+1) Already integrated in the website. The user only need to click the button to run it.  
+2) The user can also upload their GEM model. The interface accepts standard metabolic model formats (SBML/XML, JSON).
 
 **Output & Features:**
 - Interactive UI: Built with Streamlit for a seamless, browser-based experience.
